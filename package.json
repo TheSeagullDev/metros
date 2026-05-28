@@ -27,7 +27,9 @@
 	},
 	"dependencies": {
 		"@mux/mux-node": "^14.1.0",
+		"@mux/mux-player": "^3.13.0",
 		"@supabase/ssr": "^0.10.3",
-		"@supabase/supabase-js": "^2.106.2"
+		"@supabase/supabase-js": "^2.106.2",
+		"jsonwebtoken": "^9.0.3"
 	}
 }

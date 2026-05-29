@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { json } from '@sveltejs/kit';
 
 import { MUX_SIGNING_KEY, MUX_SIGNING_KEY_ID } from '$env/static/private';
-import { PUBLIC_MUX_PLAYBACK_ID } from '$env/static/public';
 
 export async function GET({ locals }) {
 	const { session } = await locals.safeGetSession();
@@ -14,12 +13,15 @@ export async function GET({ locals }) {
 			status: 401
 		});
 	}
+	const {data: stream} = await locals.supabase.from('streams').select('*').eq('active', true).single();
+
+	console.log(stream)
 
 	const privateKey = MUX_SIGNING_KEY.replace(/\\n/g, '\n');
 
 	const token = jwt.sign(
 		{
-			sub: PUBLIC_MUX_PLAYBACK_ID,
+			sub: stream.playback_id,
 			aud: 'v',
 			exp: Math.floor(Date.now() / 1000) + 60 * 60
 		},

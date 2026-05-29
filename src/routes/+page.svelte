@@ -1,20 +1,20 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import bg from '$lib/assets/background.png';
 
 	const supabase = $derived(page.data.supabase);
 
-	let email = $state('');
-	let password = $state('');
+	let email = "test@test.com";
 
 	async function signup() {
 		const { error } = await supabase.auth.signUp({
 			email,
 			password
 		});
-        if (!error) {
-            await goto("/watch");
-        }
+		if (!error) {
+			await goto('/watch');
+		}
 		console.log(error);
 	}
 
@@ -24,22 +24,50 @@
 			password
 		});
 
-        if (!error) {
-            await goto("/watch");
-        }
+		if (!error) {
+			await goto('/watch');
+		}
 
 		console.log(error);
 	}
+
+	async function paymentSucess() {
+		const paymentId = "abc123"
+		const res = await fetch('/api/payment-complete', {
+			method: 'POST',
+
+			headers: {
+				'Content-Type': 'application/json'
+			},
+
+			body: JSON.stringify({
+				email,
+				paymentId
+			})
+		});
+
+		const data = await res.json();
+
+		const { error } = await supabase.auth.signInWithPassword({
+			email: data.email,
+
+			password: data.password
+		});
+
+		if (!error) {
+			goto('/watch');
+		}
+	}
 </script>
 
-<input bind:value={email} placeholder="email" />
-
-<input bind:value={password} type="password" />
-
-<button onclick={signup}>
-	Sign Up
-</button>
-
-<button onclick={login}>
-	Login
-</button>
+<div
+	class="flex h-screen flex-col items-center justify-between"
+	style="background-image: url({bg}); background-size: cover"
+>
+	<img
+		src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1920,h=359,fit=crop/x1MQP53DI5u8ojA3/metroawards-gigapixel-cgi-6x-hNCmiXZgi6QtJzYb.png"
+		alt=""
+		class="m-4 w-2/3"
+	/>
+	<button onclick={paymentSucess} class="rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400 m-4">Pay</button>
+</div>

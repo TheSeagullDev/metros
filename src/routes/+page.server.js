@@ -12,7 +12,9 @@ export async function load() {
 		body: JSON.stringify({
 			paymentType: 'purchase',
 			amount: 5.0,
-			currency: 'USD'
+			currency: 'USD',
+			displayContactFields: 1,
+			brandColor: 'ef6823'
 		})
 	});
 

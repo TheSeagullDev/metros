@@ -5,7 +5,13 @@
 
 	const supabase = $derived(page.data.supabase);
 
-	let email = "test@test.com";
+	let email = 'test@test.com';
+
+	let { data } = $props();
+
+	function pay() {
+		appendHelcimPayIframe(data.checkoutToken);
+	}
 
 	async function signup() {
 		const { error } = await supabase.auth.signUp({
@@ -32,7 +38,7 @@
 	}
 
 	async function paymentSucess() {
-		const paymentId = "abc123"
+		const paymentId = 'abc123';
 		const res = await fetch('/api/payment-complete', {
 			method: 'POST',
 
@@ -69,5 +75,8 @@
 		alt=""
 		class="m-4 w-2/3"
 	/>
-	<button onclick={paymentSucess} class="rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400 m-4">Pay</button>
+	<button
+		onclick={pay}
+		class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400">Pay</button
+	>
 </div>

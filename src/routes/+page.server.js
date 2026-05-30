@@ -14,7 +14,7 @@ export async function load() {
 			amount: 5.0,
 			currency: 'USD',
 			displayContactFields: 1,
-			brandColor: 'ef6823'
+			customStyling: {brandColor: 'EF6823'}
 		})
 	});
 

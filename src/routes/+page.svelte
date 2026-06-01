@@ -64,7 +64,49 @@
 			goto('/watch');
 		}
 	}
+
+	async function validateResponse(message) {
+		const response = await fetch('/api/payment-complete', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				rawDataResponse: message,
+				checkoutToken: data.checkoutToken
+			})
+		});
+
+		if (!response.ok) {
+			throw new Error('Payment validation failed');
+		}
+
+		return await response.json();
+	}
 </script>
+
+<svelte:window
+	onmessage={(event) => {
+		const helcimPayJsIdentifierKey = 'helcim-pay-js-' + data.checkoutToken;
+
+		if (event.data.eventName === helcimPayJsIdentifierKey) {
+			if (event.data.eventStatus === 'ABORTED') {
+				console.error('Transaction failed!', event.data.eventMessage);
+			}
+
+			if (event.data.eventStatus === 'SUCCESS') {
+				console.log(JSON.parse(event.data.eventMessage))
+				validateResponse(event.data.eventMessage)
+					.then((response) => console.log(response))
+					.catch((err) => console.error(err));
+			}
+
+			if (event.data.eventStatus === 'HIDE') {
+				console.log('Modal or confirmation screen closed.');
+			}
+		}
+	}}
+/>
 
 <div
 	class="flex h-screen flex-col items-center justify-between"

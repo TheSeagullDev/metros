@@ -20,6 +20,8 @@ export async function load() {
 
 	const data = await response.json();
 
+	console.log(data);
+
 	return {
 		checkoutToken: data.checkoutToken
 	};

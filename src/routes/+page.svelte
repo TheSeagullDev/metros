@@ -37,35 +37,7 @@
 		console.log(error);
 	}
 
-	async function paymentSucess() {
-		const paymentId = 'abc123';
-		const res = await fetch('/api/payment-complete', {
-			method: 'POST',
-
-			headers: {
-				'Content-Type': 'application/json'
-			},
-
-			body: JSON.stringify({
-				email,
-				paymentId
-			})
-		});
-
-		const data = await res.json();
-
-		const { error } = await supabase.auth.signInWithPassword({
-			email: data.email,
-
-			password: data.password
-		});
-
-		if (!error) {
-			goto('/watch');
-		}
-	}
-
-	async function validateResponse(message) {
+	async function paymentSucess(message) {
 		const response = await fetch('/api/payment-complete', {
 			method: 'POST',
 			headers: {
@@ -81,8 +53,20 @@
 			throw new Error('Payment validation failed');
 		}
 
-		return await response.json();
+		const user = await response.json();
+
+		console.log(user);
+		const { error } = await supabase.auth.signInWithPassword({
+			email: user.email,
+
+			password: user.password
+		});
+
+		if (!error) {
+			window.location.href = '/watch';
+		}
 	}
+
 </script>
 
 <svelte:window
@@ -95,8 +79,8 @@
 			}
 
 			if (event.data.eventStatus === 'SUCCESS') {
-				console.log(JSON.parse(event.data.eventMessage))
-				validateResponse(event.data.eventMessage)
+				console.log(JSON.parse(event.data.eventMessage));
+				paymentSucess(event.data.eventMessage)
 					.then((response) => console.log(response))
 					.catch((err) => console.error(err));
 			}

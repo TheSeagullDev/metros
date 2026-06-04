@@ -32,70 +32,44 @@ export async function POST({ request }) {
 	console.log(email);
 
 	
+	// NEW USER
 
-	// check if ticket/user already exists
+	const password = crypto.randomUUID();
 
-	const { data: existingTicket } = await supabaseAdmin
-		.from('tickets')
-		.select('*')
-		.eq('email', email)
-		.single();
+	// create auth user
 
-	let password;
+	const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+		email,
 
-	// EXISTING USER
+		password,
 
-	if (existingTicket) {
-		password = existingTicket.password;
+		email_confirm: true
+	});
 
-		// re-grant access if needed
+	if (createError) {
+		console.error(createError);
 
-		await supabaseAdmin
-			.from('tickets')
-			.update({
-				paid: true
-			})
-			.eq('email', email);
-	} else {
-		// NEW USER
-
-		password = crypto.randomUUID();
-
-		// create auth user
-
-		const { error: createError } = await supabaseAdmin.auth.admin.createUser({
-			email,
-
-			password,
-
-			email_confirm: true
-		});
-
-		if (createError) {
-			console.error(createError);
-
-			return json(
-				{
-					error: createError.message
-				},
-				{
-					status: 500
-				}
-			);
-		}
-
-		// create ticket
-
-		await supabaseAdmin.from('tickets').insert({
-			email,
-
-			password,
-
-			paid: true,
-
-			created_at: new Date()
-		});
+		return json(
+			{
+				error: createError.message
+			},
+			{
+				status: 500
+			}
+		);
 	}
+
+	// create ticket
+
+	await supabaseAdmin.from('tickets').insert({
+		email,
+
+		password,
+
+		paid: true,
+
+		created_at: new Date()
+	});
 
 	return json({
 		success: true,

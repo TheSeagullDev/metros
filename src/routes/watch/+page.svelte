@@ -41,25 +41,24 @@
 </script>
 
 <div
-	class="flex h-screen flex-col items-center justify-between"
+	class="flex h-screen flex-col items-center justify-around"
 	style="background-image: url({bg}); background-size: cover"
 >
-	{#if token && stream}
-		<Banner></Banner>
-		<img
-			src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1920,h=359,fit=crop/x1MQP53DI5u8ojA3/metroawards-gigapixel-cgi-6x-hNCmiXZgi6QtJzYb.png"
-			alt=""
-			class="m-4 w-1/2"
-		/>
+	<Banner></Banner>
+	{#if token && stream && false}
 		<div class="m-4 aspect-video w-full overflow-hidden rounded-xl shadow-2xl sm:w-2/3">
 			<mux-player
 				bind:this={player}
 				playback-id={stream.playback_id}
 				playback-token={token}
-				poster="https://i.ibb.co/kgddFCp5/IMPLogo.png"
+				poster="https://metros.noahsiegel.dev/thumbnails/IMPLOGO.png"
 				stream-type="live"
 			/>
 		</div>
+	{:else}
+		<div
+			class="m-4 aspect-video w-full overflow-hidden rounded-xl bg-gray-800 shadow-2xl sm:w-2/3 flex justify-center items-center"
+		><h1 class="text-white text-2xl animate-bounce font-bold">Livestream Loading...</h1></div>
 	{/if}
 	<button
 		class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400"

@@ -93,7 +93,7 @@
 />
 
 <div
-	class="flex h-screen flex-col items-center justify-around"
+	class="flex h-screen flex-col items-center justify-between py-32 sm:py-16"
 	style="background-image: url({bg}); background-size: cover"
 >
 	<img
@@ -101,8 +101,14 @@
 		alt=""
 		class="m-4 w-2/3"
 	/>
-	<button
-		onclick={pay}
-		class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400">Pay</button
-	>
+	<div>
+		<button
+			onclick={pay}
+			class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400 text-2xl">Buy Livestream Ticket</button
+		>
+		<button
+			onclick={pay}
+			class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400 text-2xl">Already Bought a Ticket?</button
+		>
+	</div>
 </div>

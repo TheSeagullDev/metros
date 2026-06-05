@@ -93,7 +93,7 @@
 />
 
 <div
-	class="flex h-screen flex-col items-center justify-between"
+	class="flex h-screen flex-col items-center justify-around"
 	style="background-image: url({bg}); background-size: cover"
 >
 	<img

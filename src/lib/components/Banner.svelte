@@ -61,6 +61,6 @@
 
 {#if banners.length > 0}
 	<div class="banner">
-		<img src="" alt="">
+		<img src={banners[current].link} alt={banners[current].alt}>
 	</div>
 {/if}

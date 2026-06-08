@@ -9,6 +9,10 @@
 
 	let { data } = $props();
 
+	let otpState = $state(false);
+	let otpError = $state(null);
+	let otpEmail = $state();
+
 	function pay() {
 		appendHelcimPayIframe(data.checkoutToken);
 	}
@@ -67,6 +71,26 @@
 		}
 	}
 
+	async function requestOtp() {
+		const response = await fetch('/api/verify-ticket', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				email: otpEmail
+			})
+		}); 
+
+		const verify = await response.json();
+
+		if(verify.success) {
+			
+		}
+		else {
+			otpError = "No ticket found";
+		}
+	}
 </script>
 
 <svelte:window
@@ -101,14 +125,37 @@
 		alt=""
 		class="m-4 w-2/3"
 	/>
-	<div>
-		<button
-			onclick={pay}
-			class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400 text-2xl">Buy Livestream Ticket</button
-		>
-		<button
-			onclick={pay}
-			class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400 text-2xl">Already Bought a Ticket?</button
-		>
-	</div>
+	{#if !otpState}
+		<div>
+			<button
+				onclick={pay}
+				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+				>Buy Livestream Ticket</button
+			>
+			<button
+				onclick={() => (otpState = true)}
+				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+				>Already Bought a Ticket?</button
+			>
+		</div>
+	{:else}
+		<div class="rounded-2xl p-8 drop-shadow-2xl bg-blue-50">
+			<h1 class="text-2xl my-4">Check your ticket status</h1>
+			{#if otpError}
+			<h2 class="text-lg text-red-500">Error: {otpError}</h2>
+			{/if}
+			<div class="flex flex-col">
+				<label for="email" class="text-lg">Enter your email:</label>
+				<input type="email" name="email" id="email" bind:value={otpEmail}/>
+				<button onclick={requestOtp} class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400">Submit</button>
+			</div>
+		</div>
+		<div>
+			<button
+				onclick={() => (otpState = false)}
+				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+				>Go back</button
+			>
+		</div>
+	{/if}
 </div>

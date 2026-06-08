@@ -61,6 +61,6 @@
 
 {#if banners.length > 0}
 	<div class="banner">
-		<img src={banners[current].link} alt={banners[current].alt}>
+		<a href={banners[current].clickLink}><img src={banners[current].imgLink} alt={banners[current].alt}></a>
 	</div>
 {/if}

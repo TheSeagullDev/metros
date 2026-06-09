@@ -42,7 +42,7 @@
 
 <div
 	class="flex h-screen flex-col items-center justify-center p-2"
-	style="background-image: url({bg}); background-size: cover"
+	style="background-image: url({bg}); background-size: cover; background-position: 50% 80%;"
 >
 
 		<Banner></Banner>

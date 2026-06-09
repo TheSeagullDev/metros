@@ -28,7 +28,11 @@ export async function load({ locals }) {
 
 	const data = await response.json();
 
-	console.log(data);
+	await supabaseAdmin.from('payments').insert({
+		checkoutToken: data.checkoutToken,
+
+		secretToken: data.secretToken
+	});
 
 	return {
 		checkoutToken: data.checkoutToken

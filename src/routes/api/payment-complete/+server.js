@@ -10,8 +10,42 @@ export async function POST({ request }) {
 
 	// TODO:
 	// VERIFY PAYMENT WITH HELCIM
+	const { data: payment, error: paymentError } = await supabaseAdmin
+		.from('payments')
+		.select('secretToken')
+		.eq('checkoutToken', checkoutToken)
+		.single();
 
-	console.log(rawDataResponse, checkoutToken)
+	if (paymentError || !payment) {
+		return json({ error: 'Payment record not found' }, { status: 400 });
+	}
+
+	const secretToken = payment.secretToken;
+
+	console.log(rawDataResponse, checkoutToken);
+
+	const parsed = JSON.parse(rawDataResponse);
+
+	const paymentData = parsed.data.data;
+	const helcimHash = parsed.data.hash;
+
+	const yourHash = crypto
+		.createHash('sha256')
+		.update(JSON.stringify(paymentData) + secretToken)
+		.digest('hex');
+
+	if (yourHash !== helcimHash) {
+		console.error('Invalid Helcim signature');
+
+		return json(
+			{
+				error: 'Payment verification failed'
+			},
+			{
+				status: 400
+			}
+		);
+	}
 
 	const customerCode = JSON.parse(rawDataResponse).data.data.customerCode;
 	console.log(customerCode);
@@ -31,7 +65,6 @@ export async function POST({ request }) {
 	const email = data[0].billingAddress.email;
 	console.log(email);
 
-	
 	// NEW USER
 
 	const password = crypto.randomUUID();

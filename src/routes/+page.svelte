@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { fail } from '@sveltejs/kit';
 	import bg from '$lib/assets/background.png';
-	import gotts from "$lib/assets/orange-black.png";
+	import gotts from '$lib/assets/orange-black.png';
 
 	const supabase = $derived(page.data.supabase);
 
@@ -154,11 +154,13 @@
 	}}
 />
 
+<div class="h-screen fixed inset-0 -z-10" style="background-image: url({bg}); background-size: cover; background-position: 50% 80%;"></div>
+
 <div
-	class="flex h-screen flex-col items-center justify-between py-8 sm:py-4"
-	style="background-image: url({bg}); background-size: cover"
+	class="flex h-screen flex-col items-center justify-between py-8 font-montserrat sm:py-4"
+	
 >
-	<div class="flex flex-col items-center justify-center my-4">
+	<div class="my-4 flex flex-col items-center justify-center">
 		<h4 class="text-sm font-thin text-white md:text-lg md:tracking-widest">
 			THE HELEN HAYES YOUTH THEATRE PRESENTS
 		</h4>
@@ -169,22 +171,22 @@
 		/>
 	</div>
 	{#if !otpState && !accessCodeState}
-		<h1 class="font-sans text-4xl text-white my-2 font-montserrat">Official Livestream Home</h1>
+		<h1 class="my-2 text-3xl text-white sm:text-6xl">Official Livestream Home</h1>
 		<div class="flex flex-col items-center gap-2 md:w-1/4">
 			<button
 				onclick={pay}
-				class="w-full rounded-2xl bg-red-600 px-8 py-6 my-4 text-3xl font-bold text-white hover:bg-red-500"
+				class="my-4 w-full rounded-2xl bg-red-600 px-8 py-6 text-3xl font-bold text-white hover:bg-red-500"
 				>WATCH LIVE</button
 			>
 			<button
 				onclick={() => (otpState = true)}
-				class="w-full sm:w-[85%] rounded-2xl bg-black p-4 text-white hover:bg-gray-900"
+				class="w-full rounded-2xl bg-black p-4 text-white hover:bg-gray-900 sm:w-[85%]"
 				><div class="text-sm">Already Purchased Access?</div>
 				<div class="text-xs font-bold">Log in Here</div></button
 			>
 			<button
 				onclick={() => (accessCodeState = true)}
-				class="w-full sm:w-3/4 rounded-2xl bg-black p-4 text-md text-white hover:bg-gray-900"
+				class="text-md w-full rounded-2xl bg-black p-4 text-white hover:bg-gray-900 sm:w-3/4"
 				>SUPPORT/HELP</button
 			>
 		</div>
@@ -226,23 +228,33 @@
 			>
 		</div>
 	{:else}
-		<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4">
-			<h1 class="my-4 text-2xl">
-				Enter an access code given by IMPAVL support below. ONLY do so if you have been instructed
-				by support.
-			</h1>
-			<form action="?/redeemCode" method="POST">
-				<div class="flex flex-col">
-					<label for="code" class="text-lg">Enter access code:</label>
-
-					<input type="tel" maxlength="6" name="code" id="code" />
-					<button
-						type="submit"
-						class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
-						>Submit</button
-					>
-				</div>
-			</form>
+		<div class="flex w-full sm:w-2/3 items-stretch flex-col sm:flex-row justify-center">
+			<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4 flex flex-col justify-around">
+				<h1 class="text-lg">IMPAVL Support Information</h1>
+				<p>Support email: <a href="support@IMPAVL.com" class="underline">support@IMPAVL.com</a></p>
+				<p>Phone number: TBD</p>
+				<p>
+					In any support requests, please include your name, the email you purchased your ticket with,
+					and your phone number, so we can assist you quicker!
+				</p>
+			</div>
+			<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4">
+				<h1 class="my-4 text-md">
+					Enter an access code given by IMPAVL support below. ONLY do so if you have been instructed
+					by support.
+				</h1>
+				<form action="?/redeemCode" method="POST">
+					<div class="flex flex-col">
+						<label for="code" class="text-lg">Enter access code:</label>
+						<input type="tel" maxlength="6" name="code" id="code" />
+						<button
+							type="submit"
+							class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+							>Submit</button
+						>
+					</div>
+				</form>
+			</div>
 		</div>
 		<button
 			onclick={() => (accessCodeState = false)}
@@ -250,19 +262,19 @@
 			>Go back</button
 		>
 	{/if}
-	<div class="my-4 mx-2 rounded-md bg-gray-50 p-4 text-center sm:w-1/2 text-xs sm:text-sm">
-		<h2>2026 LIVESTREAM PRESENTED BY:</h2>
-		<img src={gotts} class="w-24 m-auto" alt="">
-		<p class="my-2">
-			The Guild of Technical Theatre Students (GOTTS) is an educational initiative dedicated to
+	<div class="mx-2 my-4 rounded-md bg-gray-50 p-4 text-center text-xs lg:w-1/2 sm:text-sm uppercase">
+		<h2 class="font-bold">2026 LIVESTREAM PRESENTED BY:</h2>
+		<div class="w-full flex justify-center"><a href="https://www.impavl.com/gotts" target="_blank"><img src={gotts} class="w-24 sm:w-48" alt="" /></a></div>
+		<p class="my-2 font-semibold">
+			The Guild of Technical Theatre Students (<a href="https://www.impavl.com/gotts" class="underline" target="_blank">GOTTS</a>) is an educational initiative dedicated to
 			supporting, training, and recognizing student technicians and production leaders in theatre
 			and live events throughout the region.
 		</p>
 
-		<p class="my-2">
+		<p class="my-2 font-semibold">
 			Through mentorship, professional experiences, and scholarship opportunities, GOTTS aims to
 			elevate the visibility and standard of student technical theatre education.
 		</p>
-		<p>CLICK TO LEARN MORE!</p>
+		<p class="underline italic"><a href="https://www.impavl.com/gotts" target="_blank">CLICK TO LEARN MORE!</a></p>
 	</div>
 </div>

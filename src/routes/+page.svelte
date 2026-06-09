@@ -1,17 +1,33 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { fail } from '@sveltejs/kit';
 	import bg from '$lib/assets/background.png';
 
 	const supabase = $derived(page.data.supabase);
 
-	let email = 'test@test.com';
-
-	let { data } = $props();
+	let { data, form } = $props();
 
 	let otpState = $state(false);
+	let accessCodeState = $state(false);
 	let otpError = $state(null);
 	let otpEmail = $state();
+	let ticketValidated = $state(false);
+	let otpToken = $state();
+	let accessCode = $state();
+
+	$effect(async () => {
+		if (form?.email && form?.password) {
+			const { error } = await supabase.auth.signInWithPassword({
+				email: form.email,
+				password: form.password
+			});
+
+			if (!error) {
+				window.location.href = '/watch';
+			}
+		}
+	});
 
 	function pay() {
 		appendHelcimPayIframe(data.checkoutToken);
@@ -23,7 +39,7 @@
 			password
 		});
 		if (!error) {
-			await goto('/watch');
+			window.location.href = '/watch';
 		}
 		console.log(error);
 	}
@@ -35,7 +51,7 @@
 		});
 
 		if (!error) {
-			await goto('/watch');
+			window.location.href = '/watch';
 		}
 
 		console.log(error);
@@ -80,17 +96,38 @@
 			body: JSON.stringify({
 				email: otpEmail
 			})
-		}); 
+		});
 
 		const verify = await response.json();
 
-		if(verify.success) {
-			
-		}
-		else {
-			otpError = "No ticket found";
+		if (verify.success) {
+			ticketValidated = true;
+			const { error } = await supabase.auth.signInWithOtp({
+				email: otpEmail,
+				options: {
+					shouldCreateUser: false
+				}
+			});
+		} else {
+			otpError = 'No ticket found';
 		}
 	}
+
+	async function submitOtp() {
+		const { error } = await supabase.auth.verifyOtp({
+			email: otpEmail,
+			token: otpToken,
+			type: 'email'
+		});
+
+		if (!error) {
+			window.location.href = '/watch';
+		}
+
+		console.log(error);
+	}
+
+	async function submitAccessCode() {}
 </script>
 
 <svelte:window
@@ -125,8 +162,8 @@
 		alt=""
 		class="m-4 w-2/3"
 	/>
-	{#if !otpState}
-		<div>
+	{#if !otpState && !accessCodeState}
+		<div class="flex flex-col sm:flex-row">
 			<button
 				onclick={pay}
 				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
@@ -137,18 +174,41 @@
 				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
 				>Already Bought a Ticket?</button
 			>
+			<button
+				onclick={() => (accessCodeState = true)}
+				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+				>Have an Access Code?</button
+			>
 		</div>
-	{:else}
-		<div class="rounded-2xl p-8 drop-shadow-2xl bg-blue-50">
-			<h1 class="text-2xl my-4">Check your ticket status</h1>
+	{:else if otpState}
+		<div class="rounded-2xl bg-blue-50 p-8 drop-shadow-2xl m-4">
+			<h1 class="my-4 text-2xl">Use a previously purchased ticket</h1>
 			{#if otpError}
-			<h2 class="text-lg text-red-500">Error: {otpError}</h2>
+				<h2 class="text-lg text-red-500">Error: {otpError}</h2>
 			{/if}
-			<div class="flex flex-col">
-				<label for="email" class="text-lg">Enter your email:</label>
-				<input type="email" name="email" id="email" bind:value={otpEmail}/>
-				<button onclick={requestOtp} class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400">Submit</button>
-			</div>
+			{#if !ticketValidated}
+				<div class="flex flex-col">
+					<label for="email" class="text-lg">Enter your email:</label>
+					<input type="email" name="email" id="email" bind:value={otpEmail} />
+					<button
+						onclick={requestOtp}
+						class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+						>Submit</button
+					>
+				</div>
+			{:else}
+				<div class="flex flex-col">
+					<label for="otpToken" class="text-lg"
+						>Check your email and enter the six digit code below:</label
+					>
+					<input type="tel" maxlength="6" name="otpToken" id="otpToken" bind:value={otpToken} />
+					<button
+						onclick={submitOtp}
+						class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+						>Submit</button
+					>
+				</div>
+			{/if}
 		</div>
 		<div>
 			<button
@@ -157,5 +217,35 @@
 				>Go back</button
 			>
 		</div>
+	{:else}
+		<div class="rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4 m-4">
+			<h1 class="my-4 text-2xl">
+				Enter an access code given by IMPAVL support below. ONLY do so if you have been instructed
+				by support.
+			</h1>
+			<form action="?/redeemCode" method="POST">
+			<div class="flex flex-col">
+				<label for="code" class="text-lg">Enter access code:</label>
+				
+					<input
+						type="tel"
+						maxlength="6"
+						name="code"
+						id="code"
+					/>
+					<button
+						type="submit"
+						class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+						>Submit</button
+					>
+				
+			</div>
+			</form>
+		</div>
+		<button
+			onclick={() => (accessCodeState = false)}
+			class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+			>Go back</button
+		>
 	{/if}
 </div>

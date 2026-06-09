@@ -45,7 +45,7 @@
 	style="background-image: url({bg}); background-size: cover"
 >
 	<Banner></Banner>
-	{#if token && stream && false}
+	{#if token && stream}
 		<div class="m-4 aspect-video w-full overflow-hidden rounded-xl shadow-2xl sm:w-2/3">
 			<mux-player
 				bind:this={player}

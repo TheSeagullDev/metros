@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { fail } from '@sveltejs/kit';
 	import bg from '$lib/assets/background.png';
+	import gotts from "$lib/assets/orange-black.png";
 
 	const supabase = $derived(page.data.supabase);
 
@@ -154,34 +155,41 @@
 />
 
 <div
-	class="flex h-screen flex-col items-center justify-between py-32 sm:py-16"
+	class="flex h-screen flex-col items-center justify-between py-8 sm:py-4"
 	style="background-image: url({bg}); background-size: cover"
 >
-	<img
-		src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1920,h=359,fit=crop/x1MQP53DI5u8ojA3/metroawards-gigapixel-cgi-6x-hNCmiXZgi6QtJzYb.png"
-		alt=""
-		class="m-4 w-2/3"
-	/>
+	<div class="flex flex-col items-center justify-center my-4">
+		<h4 class="text-sm font-thin text-white md:text-lg md:tracking-widest">
+			THE HELEN HAYES YOUTH THEATRE PRESENTS
+		</h4>
+		<img
+			src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1920,h=359,fit=crop/x1MQP53DI5u8ojA3/metroawards-gigapixel-cgi-6x-hNCmiXZgi6QtJzYb.png"
+			alt=""
+			class="mx-4 w-full sm:w-1/2"
+		/>
+	</div>
 	{#if !otpState && !accessCodeState}
-		<div class="flex flex-col sm:flex-row">
+		<h1 class="font-sans text-4xl text-white my-2 font-montserrat">Official Livestream Home</h1>
+		<div class="flex flex-col items-center gap-2 md:w-1/4">
 			<button
 				onclick={pay}
-				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
-				>Buy Livestream Ticket</button
+				class="w-full rounded-2xl bg-red-600 px-8 py-6 my-4 text-3xl font-bold text-white hover:bg-red-500"
+				>WATCH LIVE</button
 			>
 			<button
 				onclick={() => (otpState = true)}
-				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
-				>Already Bought a Ticket?</button
+				class="w-full sm:w-[85%] rounded-2xl bg-black p-4 text-white hover:bg-gray-900"
+				><div class="text-sm">Already Purchased Access?</div>
+				<div class="text-xs font-bold">Log in Here</div></button
 			>
 			<button
 				onclick={() => (accessCodeState = true)}
-				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
-				>Have an Access Code?</button
+				class="w-full sm:w-3/4 rounded-2xl bg-black p-4 text-md text-white hover:bg-gray-900"
+				>SUPPORT/HELP</button
 			>
 		</div>
 	{:else if otpState}
-		<div class="rounded-2xl bg-blue-50 p-8 drop-shadow-2xl m-4">
+		<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl">
 			<h1 class="my-4 text-2xl">Use a previously purchased ticket</h1>
 			{#if otpError}
 				<h2 class="text-lg text-red-500">Error: {otpError}</h2>
@@ -218,28 +226,22 @@
 			>
 		</div>
 	{:else}
-		<div class="rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4 m-4">
+		<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4">
 			<h1 class="my-4 text-2xl">
 				Enter an access code given by IMPAVL support below. ONLY do so if you have been instructed
 				by support.
 			</h1>
 			<form action="?/redeemCode" method="POST">
-			<div class="flex flex-col">
-				<label for="code" class="text-lg">Enter access code:</label>
-				
-					<input
-						type="tel"
-						maxlength="6"
-						name="code"
-						id="code"
-					/>
+				<div class="flex flex-col">
+					<label for="code" class="text-lg">Enter access code:</label>
+
+					<input type="tel" maxlength="6" name="code" id="code" />
 					<button
 						type="submit"
 						class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
 						>Submit</button
 					>
-				
-			</div>
+				</div>
 			</form>
 		</div>
 		<button
@@ -248,4 +250,19 @@
 			>Go back</button
 		>
 	{/if}
+	<div class="my-4 mx-2 rounded-md bg-gray-50 p-4 text-center sm:w-1/2 text-xs sm:text-sm">
+		<h2>2026 LIVESTREAM PRESENTED BY:</h2>
+		<img src={gotts} class="w-24 m-auto" alt="">
+		<p class="my-2">
+			The Guild of Technical Theatre Students (GOTTS) is an educational initiative dedicated to
+			supporting, training, and recognizing student technicians and production leaders in theatre
+			and live events throughout the region.
+		</p>
+
+		<p class="my-2">
+			Through mentorship, professional experiences, and scholarship opportunities, GOTTS aims to
+			elevate the visibility and standard of student technical theatre education.
+		</p>
+		<p>CLICK TO LEARN MORE!</p>
+	</div>
 </div>

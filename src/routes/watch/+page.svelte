@@ -41,25 +41,28 @@
 </script>
 
 <div
-	class="flex h-screen flex-col items-center justify-around"
+	class="flex h-screen flex-col items-center justify-center p-2"
 	style="background-image: url({bg}); background-size: cover"
 >
-	<Banner></Banner>
-	{#if token && stream}
-		<div class="m-4 aspect-video w-full overflow-hidden rounded-xl shadow-2xl sm:w-2/3">
-			<mux-player
-				bind:this={player}
-				playback-id={stream.playback_id}
-				playback-token={token}
-				poster="https://metros.noahsiegel.dev/thumbnails/IMPLOGO.png"
-				stream-type="live"
-			/>
-		</div>
-	{:else}
-		<div
-			class="m-4 aspect-video w-full overflow-hidden rounded-xl bg-gray-800 shadow-2xl sm:w-2/3 flex justify-center items-center"
-		><h1 class="text-white text-2xl animate-bounce font-bold">Livestream Loading...</h1></div>
-	{/if}
+
+		<Banner></Banner>
+		{#if token && stream}
+			<div class="m-4 aspect-video w-full overflow-hidden rounded-xl shadow-2xl sm:w-2/3">
+				<mux-player
+					bind:this={player}
+					playback-id={stream.playback_id}
+					playback-token={token}
+					poster="https://metros.noahsiegel.dev/thumbnails/IMPLOGO.png"
+					stream-type="live"
+				/>
+			</div>
+		{:else}
+			<div
+				class="m-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-gray-800 shadow-2xl sm:w-2/3"
+			>
+				<h1 class="animate-bounce text-2xl font-bold text-white">Livestream Loading...</h1>
+			</div>
+		{/if}
 	<button
 		class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400"
 		onclick={async () => {

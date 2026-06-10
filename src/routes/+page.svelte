@@ -6,8 +6,6 @@
 	import bg from '$lib/assets/background.png';
 	import gotts from '$lib/assets/orange-black.png';
 	import { tick } from 'svelte';
-	import { notifications, ERROR_CODES } from '$lib/stores/notificationStore';
-	import { handleAuthError } from '$lib/utils/errorHandler';
 
 	const supabase = $derived(page.data.supabase);
 
@@ -20,6 +18,8 @@
 	let ticketValidated = $state(false);
 	let otpToken = $state();
 	let accessCode = $state();
+	let checkoutToken = $state(null);
+	let isInitializingPayment = $state(false);
 
 	$effect(async () => {
 		if (form?.email && form?.password) {
@@ -34,8 +34,38 @@
 		}
 	});
 
+	async function initializePayment() {
+		isInitializingPayment = true;
+		try {
+			const response = await fetch('/api/helcim-init', {
+				method: 'POST'
+			});
+
+			if (!response.ok) {
+				console.error('[HELCIM_INIT_FAILED]', response.status);
+				alert('Failed to initialize payment. Please try again.');
+				return;
+			}
+
+			const data = await response.json();
+			checkoutToken = data.checkoutToken;
+
+			// Open Helcim iframe
+			appendHelcimPayIframe(checkoutToken);
+		} catch (error) {
+			console.error('[HELCIM_INIT_ERROR]', error);
+			alert('Failed to initialize payment. Please try again.');
+		} finally {
+			isInitializingPayment = false;
+		}
+	}
+
 	function pay() {
-		appendHelcimPayIframe(data.checkoutToken);
+		if (!checkoutToken) {
+			initializePayment();
+		} else {
+			appendHelcimPayIframe(checkoutToken);
+		}
 	}
 
 	async function signup() {
@@ -63,45 +93,34 @@
 	}
 
 	async function paymentSucess(message) {
-		notifications.success('Access granted! Redirecting to stream...');
-		try {
-			const response = await fetch('/api/payment-complete', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					rawDataResponse: message,
-					checkoutToken: data.checkoutToken
-				})
-			});
+		const response = await fetch('/api/payment-complete', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				rawDataResponse: message,
+				checkoutToken: checkoutToken
+			})
+		});
 
-			if (!response.ok) {
-				notifications.error(ERROR_CODES.AUTH_PAYMENT_FAILED);
-				return;
-			}
+		if (!response.ok) {
+			throw new Error('Payment validation failed');
+		}
 
-			const user = await response.json();
+		const user = await response.json();
 
-			if (user.error) {
-				notifications.error(ERROR_CODES.AUTH_PAYMENT_FAILED);
-				return;
-			}
+		console.log(user);
+		const { error } = await supabase.auth.signInWithPassword({
+			email: user.email,
 
-			const { error } = await supabase.auth.signInWithPassword({
-				email: user.email,
-				password: user.password
-			});
+			password: user.password
+		});
 
-			if (error) {
-				handleAuthError(error, 'login');
-				return;
-			}
-
+		if (!error) {
 			window.location.href = '/watch';
-		} catch (error) {
-			console.error('[PAYMENT_ERROR]', error);
-			notifications.error(ERROR_CODES.NETWORK_ERROR);
+		} else {
+			console.log(error);
 		}
 	}
 
@@ -150,7 +169,7 @@
 
 <svelte:window
 	onmessage={(event) => {
-		const helcimPayJsIdentifierKey = 'helcim-pay-js-' + data.checkoutToken;
+		const helcimPayJsIdentifierKey = 'helcim-pay-js-' + checkoutToken;
 
 		if (event.data.eventName === helcimPayJsIdentifierKey) {
 			if (event.data.eventStatus === 'ABORTED') {
@@ -192,9 +211,11 @@
 		<div class="flex flex-col items-center gap-2 md:w-1/4">
 			<button
 				onclick={pay}
-				class="my-4 w-full rounded-2xl bg-red-600 px-8 py-6 text-3xl font-bold text-white hover:bg-red-500"
-				>WATCH LIVE</button
+				disabled={isInitializingPayment}
+				class="my-4 w-full rounded-2xl bg-red-600 px-8 py-6 text-3xl font-bold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
 			>
+				{isInitializingPayment ? 'Initializing...' : 'WATCH LIVE'}
+			</button>
 			<button
 				onclick={() => (otpState = true)}
 				class="w-full rounded-2xl bg-black p-4 text-white hover:bg-gray-900 sm:w-[85%]"

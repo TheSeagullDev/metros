@@ -4,6 +4,7 @@
 	import { fail } from '@sveltejs/kit';
 	import bg from '$lib/assets/background.png';
 	import gotts from '$lib/assets/orange-black.png';
+	import { tick } from 'svelte';
 
 	const supabase = $derived(page.data.supabase);
 
@@ -86,6 +87,9 @@
 		if (!error) {
 			window.location.href = '/watch';
 		}
+		else {
+			console.log(error);
+		}
 	}
 
 	async function requestOtp() {
@@ -154,12 +158,12 @@
 	}}
 />
 
-<div class="h-screen fixed inset-0 -z-10" style="background-image: url({bg}); background-size: cover; background-position: 50% 80%;"></div>
-
 <div
-	class="flex h-screen flex-col items-center justify-between py-8 font-montserrat sm:py-4"
-	
->
+	class="fixed inset-0 -z-10 h-screen"
+	style="background-image: url({bg}); background-size: cover; background-position: 50% 80%;"
+></div>
+
+<div class="flex h-screen flex-col items-center justify-between py-8 font-montserrat sm:py-4">
 	<div class="my-4 flex flex-col items-center justify-center">
 		<h4 class="text-sm font-thin text-white md:text-lg md:tracking-widest">
 			THE HELEN HAYES YOUTH THEATRE PRESENTS
@@ -222,24 +226,29 @@
 		</div>
 		<div>
 			<button
-				onclick={() => (otpState = false)}
+				onclick={() => {
+					otpState = false;
+					ticketValidated = false;
+				}}
 				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
 				>Go back</button
 			>
 		</div>
 	{:else}
-		<div class="flex w-full sm:w-2/3 items-stretch flex-col sm:flex-row justify-center">
-			<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4 flex flex-col justify-around">
+		<div class="flex w-full flex-col items-stretch justify-center sm:w-2/3 sm:flex-row">
+			<div
+				class="m-4 flex flex-col justify-around rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4"
+			>
 				<h1 class="text-lg">IMPAVL Support Information</h1>
 				<p>Support email: <a href="support@IMPAVL.com" class="underline">support@IMPAVL.com</a></p>
 				<p>Phone number: TBD</p>
 				<p>
-					In any support requests, please include your name, the email you purchased your ticket with,
-					and your phone number, so we can assist you quicker!
+					In any support requests, please include your name, the email you purchased your ticket
+					with, and your phone number, so we can assist you quicker!
 				</p>
 			</div>
 			<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4">
-				<h1 class="my-4 text-md">
+				<h1 class="text-md my-4">
 					Enter an access code given by IMPAVL support below. ONLY do so if you have been instructed
 					by support.
 				</h1>
@@ -262,19 +271,30 @@
 			>Go back</button
 		>
 	{/if}
-	<div class="mx-2 my-4 rounded-md bg-gray-50 p-4 text-center text-xs lg:w-1/2 sm:text-sm uppercase">
+	<div
+		class="mx-2 my-4 rounded-md bg-gray-50 p-4 text-center text-xs uppercase sm:text-sm lg:w-1/2"
+	>
 		<h2 class="font-bold">2026 LIVESTREAM PRESENTED BY:</h2>
-		<div class="w-full flex justify-center"><a href="https://www.impavl.com/gotts" target="_blank"><img src={gotts} class="w-24 sm:w-48" alt="" /></a></div>
+		<div class="flex w-full justify-center">
+			<a href="https://www.impavl.com/gotts" target="_blank"
+				><img src={gotts} class="w-24 sm:w-48" alt="" /></a
+			>
+		</div>
 		<p class="my-2 font-semibold">
-			The Guild of Technical Theatre Students (<a href="https://www.impavl.com/gotts" class="underline" target="_blank">GOTTS</a>) is an educational initiative dedicated to
-			supporting, training, and recognizing student technicians and production leaders in theatre
-			and live events throughout the region.
+			The Guild of Technical Theatre Students (<a
+				href="https://www.impavl.com/gotts"
+				class="underline"
+				target="_blank">GOTTS</a
+			>) is an educational initiative dedicated to supporting, training, and recognizing student
+			technicians and production leaders in theatre and live events throughout the region.
 		</p>
 
 		<p class="my-2 font-semibold">
 			Through mentorship, professional experiences, and scholarship opportunities, GOTTS aims to
 			elevate the visibility and standard of student technical theatre education.
 		</p>
-		<p class="underline italic"><a href="https://www.impavl.com/gotts" target="_blank">CLICK TO LEARN MORE!</a></p>
+		<p class="italic underline">
+			<a href="https://www.impavl.com/gotts" target="_blank">CLICK TO LEARN MORE!</a>
+		</p>
 	</div>
 </div>

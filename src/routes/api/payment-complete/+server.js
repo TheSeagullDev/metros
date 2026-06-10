@@ -3,7 +3,7 @@ import { json } from '@sveltejs/kit';
 import crypto from 'crypto';
 
 import { supabaseAdmin } from '$lib/server/supabaseAdmin';
-import { HELCIM_API_TOKEN } from '$env/static/private';
+import { HELCIM_API_TOKEN, DISCORD_WEBHOOK_URL } from '$env/static/private';
 
 export async function POST({ request }) {
 	const { rawDataResponse, checkoutToken } = await request.json();
@@ -62,14 +62,48 @@ export async function POST({ request }) {
 	const res = await fetch(url, options);
 	const data = await res.json();
 	console.log(data);
-	const email = data[0].billingAddress.email;
+	const email = data[0].billingAddress.email.toLowerCase();
 	console.log(email);
 
 	// NEW USER
 
-	const password = crypto.randomUUID();
+	let password = crypto.randomUUID();
 
 	// create auth user
+
+	const { data: existingTicket } = await supabaseAdmin
+		.from('tickets')
+		.select("*")
+		.eq('email', email)
+		.maybeSingle();
+
+	if (existingTicket) {
+		console.log("ticket", existingTicket)
+		await fetch(DISCORD_WEBHOOK_URL, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				embeds: [
+					{
+						title: 'Duplicate Payment Detected',
+						color: 16753920, // orange
+						fields: [{ name: 'Email', value: email, inline: true }],
+						timestamp: new Date().toISOString()
+					}
+				]
+			})
+		});
+		password = existingTicket.password;
+		return json({
+			success: true,
+
+			email,
+
+			password
+		});
+	}
 
 	const { error: createError } = await supabaseAdmin.auth.admin.createUser({
 		email,
@@ -78,19 +112,6 @@ export async function POST({ request }) {
 
 		email_confirm: true
 	});
-
-	if (createError) {
-		console.error(createError);
-
-		return json(
-			{
-				error: createError.message
-			},
-			{
-				status: 500
-			}
-		);
-	}
 
 	// create ticket
 

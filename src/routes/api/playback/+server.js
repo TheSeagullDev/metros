@@ -23,7 +23,7 @@ export async function GET({ locals }) {
 		{
 			sub: stream.playback_id,
 			aud: 'v',
-			exp: Math.floor(Date.now() / 1000) + 60 * 60
+			exp: Math.floor(Date.now() / 1000) + 600 * 60
 		},
 		privateKey,
 		{

@@ -1,4 +1,4 @@
-// src/routes/checkout/+page.server.js
+// src/routes/+page.server.js
 
 import { HELCIM_API_TOKEN } from '$env/static/private';
 import { supabaseAdmin } from '$lib/server/supabaseAdmin.js';

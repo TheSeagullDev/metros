@@ -1,3 +1,4 @@
+<!-- src/routes/+page.svelte -->
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -5,6 +6,8 @@
 	import bg from '$lib/assets/background.png';
 	import gotts from '$lib/assets/orange-black.png';
 	import { tick } from 'svelte';
+	import { notifications, ERROR_CODES } from '$lib/stores/notificationStore';
+	import { handleAuthError } from '$lib/utils/errorHandler';
 
 	const supabase = $derived(page.data.supabase);
 
@@ -60,35 +63,45 @@
 	}
 
 	async function paymentSucess(message) {
-		const response = await fetch('/api/payment-complete', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				rawDataResponse: message,
-				checkoutToken: data.checkoutToken
-			})
-		});
+		notifications.success('Access granted! Redirecting to stream...');
+		try {
+			const response = await fetch('/api/payment-complete', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					rawDataResponse: message,
+					checkoutToken: data.checkoutToken
+				})
+			});
 
-		if (!response.ok) {
-			throw new Error('Payment validation failed');
-		}
+			if (!response.ok) {
+				notifications.error(ERROR_CODES.AUTH_PAYMENT_FAILED);
+				return;
+			}
 
-		const user = await response.json();
+			const user = await response.json();
 
-		console.log(user);
-		const { error } = await supabase.auth.signInWithPassword({
-			email: user.email,
+			if (user.error) {
+				notifications.error(ERROR_CODES.AUTH_PAYMENT_FAILED);
+				return;
+			}
 
-			password: user.password
-		});
+			const { error } = await supabase.auth.signInWithPassword({
+				email: user.email,
+				password: user.password
+			});
 
-		if (!error) {
+			if (error) {
+				handleAuthError(error, 'login');
+				return;
+			}
+
 			window.location.href = '/watch';
-		}
-		else {
-			console.log(error);
+		} catch (error) {
+			console.error('[PAYMENT_ERROR]', error);
+			notifications.error(ERROR_CODES.NETWORK_ERROR);
 		}
 	}
 

@@ -2,6 +2,8 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 
+	import Toast from '$lib/components/Toast.svelte';
+
 	import { invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -23,5 +25,7 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
+
+<Toast />
 
 {@render children()}

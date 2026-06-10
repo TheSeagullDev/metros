@@ -1,3 +1,5 @@
+// src/routes/watch/+page.server.js
+
 import jwt from 'jsonwebtoken';
 import { redirect } from '@sveltejs/kit';
 

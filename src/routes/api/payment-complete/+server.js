@@ -1,3 +1,4 @@
+// src/routes/api/payment-complete/server.js
 import { json } from '@sveltejs/kit';
 
 import crypto from 'crypto';
@@ -7,9 +8,6 @@ import { HELCIM_API_TOKEN, DISCORD_WEBHOOK_URL } from '$env/static/private';
 
 export async function POST({ request }) {
 	const { rawDataResponse, checkoutToken } = await request.json();
-
-	// TODO:
-	// VERIFY PAYMENT WITH HELCIM
 	const { data: payment, error: paymentError } = await supabaseAdmin
 		.from('payments')
 		.select('secretToken')

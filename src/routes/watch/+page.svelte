@@ -1,3 +1,4 @@
+<!-- src/routes/watch/+page.svelte -->
 <script>
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';

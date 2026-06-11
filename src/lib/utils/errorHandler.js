@@ -82,28 +82,42 @@ export async function withTimeout(promise, timeoutMs = 5000) {
 }
 
 /**
- * Wrap signout with timeout to prevent hanging
- * @param {Function} signoutFn - The supabase.auth.signOut function
- * @returns {Promise} - Resolves when signout completes or timeout
+ * Sign out with timeout and redirect
+ * MUST be called with: await signoutWithTimeout(supabase, goto);
+ * @param {Object} supabase - The Supabase client
+ * @param {Function} goto - SvelteKit's goto function
+ * @param {number} timeoutMs - Timeout in milliseconds
  */
-export async function signoutWithTimeout(signoutFn, timeoutMs = 3000) {
+export async function signoutWithTimeout(supabase, goto, timeoutMs = 3000) {
 	try {
-		const signoutPromise = signoutFn();
+		console.log('[SIGNOUT] Attempting to sign out with timeout...');
+
+		const signoutPromise = supabase.auth.signOut();
 		const timeoutPromise = new Promise((_, reject) =>
 			setTimeout(() => reject(new Error('Signout timeout')), timeoutMs)
 		);
 
 		await Promise.race([signoutPromise, timeoutPromise]);
+
+		console.log('[SIGNOUT] Signed out successfully');
 		notifications.success('Signed out');
-		return true;
 	} catch (error) {
-		console.error('[SIGNOUT_ERROR]', error);
-		// Force local logout
+		console.error('[SIGNOUT_ERROR]', error?.message || error);
+		// Signout failed or timed out - force a hard logout
+		console.log('[SIGNOUT] Forcing local logout...');
+
+		// Clear all storage
 		localStorage.clear();
 		sessionStorage.clear();
-		notifications.warning('Signed out (forced local cleanup)');
-		return true; // Return true anyway to proceed to redirect
+
+		// Note: We still need to redirect because clearing storage alone
+		// doesn't fully reset the in-memory Supabase session
+		notifications.warning('Signed out');
 	}
+
+	// Always redirect, whether signout succeeded or was forced
+	// The redirect will cause a page reload which resets the Supabase client
+	await goto('/');
 }
 
 /**

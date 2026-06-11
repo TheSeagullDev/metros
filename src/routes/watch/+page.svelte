@@ -87,11 +87,7 @@
 	<button
 		class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400"
 		onclick={async () => {
-			const success = await signoutWithTimeout(() => supabase.auth.signOut(), 3000);
-
-			if (success) {
-				await goto('/');
-			}
+			await signoutWithTimeout(supabase, goto);
 		}}>Sign out</button
 	>
 </div>

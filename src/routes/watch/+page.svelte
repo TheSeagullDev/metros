@@ -19,15 +19,12 @@
 	const supabase = $derived(page.data.supabase);
 
 	$effect(() => {
-		clearTimeout(loadTimeout);
-		if (!token || !stream) {
-			loadTimeout = setTimeout(() => {
-				errorMessage = 'Stream loading took too long. Check your connection and refresh.';
-				notifications.error(ERROR_CODES.STREAM_LOAD_TIMEOUT);
-			}, 5000);
-		} else {
-			clearTimeout(loadTimeout);
-			errorMessage = null;
+		if (player) {
+			playerLoaded = true;
+			console.log('[PLAYER CREATED]', {
+				readyState: player.readyState,
+				streamType: player.streamType
+			});
 		}
 	});
 </script>

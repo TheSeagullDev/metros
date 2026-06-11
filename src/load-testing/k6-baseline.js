@@ -9,6 +9,6 @@ export let options = {
 };
 
 export default function () {
-	let res = http.get('http://localhost:5173');
+	let res = http.get('https://metros.noahsiegel.dev');
 	check(res, { 'status is 200': (r) => r.status === 200 });
 }

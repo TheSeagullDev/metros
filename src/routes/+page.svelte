@@ -6,6 +6,8 @@
 	import bg from '$lib/assets/background.png';
 	import gotts from '$lib/assets/orange-black.png';
 	import { tick } from 'svelte';
+	import { notifications, ERROR_CODES } from '$lib/stores/notificationStore';
+	import { handleAuthError } from '$lib/utils/errorHandler';
 
 	const supabase = $derived(page.data.supabase);
 
@@ -22,6 +24,10 @@
 	let isInitializingPayment = $state(false);
 
 	$effect(async () => {
+		if (form?.errorCode) {
+			notifications.error(form.errorCode);
+			return;
+		}
 		if (form?.email && form?.password) {
 			const { error } = await supabase.auth.signInWithPassword({
 				email: form.email,
@@ -93,78 +99,110 @@
 	}
 
 	async function paymentSucess(message) {
-		const response = await fetch('/api/payment-complete', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				rawDataResponse: message,
-				checkoutToken: checkoutToken
-			})
-		});
+		try {
+			const response = await fetch('/api/payment-complete', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					rawDataResponse: message,
+					checkoutToken: checkoutToken
+				})
+			});
 
-		if (!response.ok) {
-			throw new Error('Payment validation failed');
-		}
+			if (!response.ok) {
+				notifications.error(ERROR_CODES.AUTH_PAYMENT_FAILED);
+				return;
+			}
 
-		const user = await response.json();
+			const user = await response.json();
 
-		console.log(user);
-		const { error } = await supabase.auth.signInWithPassword({
-			email: user.email,
+			if (user.error) {
+				notifications.error(ERROR_CODES.AUTH_PAYMENT_FAILED);
+				return;
+			}
 
-			password: user.password
-		});
+			const { error } = await supabase.auth.signInWithPassword({
+				email: user.email,
+				password: user.password
+			});
 
-		if (!error) {
+			if (error) {
+				handleAuthError(error, 'login');
+				return;
+			}
+
+			notifications.success('Access granted! Redirecting to stream...');
 			window.location.href = '/watch';
-		} else {
-			console.log(error);
+		} catch (error) {
+			console.error('[PAYMENT_ERROR]', error);
+			notifications.error(ERROR_CODES.NETWORK_ERROR);
 		}
 	}
 
 	async function requestOtp() {
-		const response = await fetch('/api/verify-ticket', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				email: otpEmail
-			})
-		});
+		try {
+			const response = await fetch('/api/verify-ticket', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					email: otpEmail
+				})
+			});
 
-		const verify = await response.json();
+			const verify = await response.json();
 
-		if (verify.success) {
+			if (!verify.success) {
+				notifications.error(ERROR_CODES.TICKET_NOT_FOUND);
+				return;
+			}
+
 			ticketValidated = true;
+			otpError = null;
+
 			const { error } = await supabase.auth.signInWithOtp({
 				email: otpEmail,
 				options: {
 					shouldCreateUser: false
 				}
 			});
-		} else {
-			otpError = 'No ticket found';
+
+			if (error) {
+				handleAuthError(error, 'otp_request');
+				ticketValidated = false;
+				return;
+			}
+
+			notifications.success('Code sent! Check your email.');
+		} catch (error) {
+			console.error('[OTP_REQUEST_ERROR]', error);
+			notifications.error(ERROR_CODES.NETWORK_ERROR);
 		}
 	}
 
 	async function submitOtp() {
-		const { error } = await supabase.auth.verifyOtp({
-			email: otpEmail,
-			token: otpToken,
-			type: 'email'
-		});
+		try {
+			const { error } = await supabase.auth.verifyOtp({
+				email: otpEmail,
+				token: otpToken,
+				type: 'email'
+			});
 
-		if (!error) {
+			if (error) {
+				handleAuthError(error, 'otp_verify');
+				return;
+			}
+
+			notifications.success('Welcome back! Redirecting to stream...');
 			window.location.href = '/watch';
+		} catch (error) {
+			console.error('[OTP_VERIFY_ERROR]', error);
+			notifications.error(ERROR_CODES.NETWORK_ERROR);
 		}
-
-		console.log(error);
 	}
-
-	async function submitAccessCode() {}
 </script>
 
 <svelte:window

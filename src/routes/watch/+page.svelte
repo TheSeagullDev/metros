@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import '@mux/mux-player';
+	import { signoutWithTimeout } from '$lib/utils/errorHandler';
 
 	import Banner from '$lib/components/Banner.svelte';
 	import bg from '$lib/assets/background.png';
@@ -11,17 +12,22 @@
 
 	const stream = $derived(data.stream);
 	const token = $derived(data.token);
+	let playerLoaded = $state(false);
 
 	let player = $state();
 
 	const supabase = $derived(page.data.supabase);
 
 	$effect(() => {
-		if (player) {
-			console.log('[PLAYER CREATED]', {
-				readyState: player.readyState,
-				streamType: player.streamType
-			});
+		clearTimeout(loadTimeout);
+		if (!token || !stream) {
+			loadTimeout = setTimeout(() => {
+				errorMessage = 'Stream loading took too long. Check your connection and refresh.';
+				notifications.error(ERROR_CODES.STREAM_LOAD_TIMEOUT);
+			}, 5000);
+		} else {
+			clearTimeout(loadTimeout);
+			errorMessage = null;
 		}
 	});
 </script>
@@ -32,8 +38,14 @@
 >
 	<Banner></Banner>
 	{#if token && stream}
-		<div class="m-4 aspect-video w-full overflow-hidden rounded-xl shadow-2xl sm:w-2/3">
+		<div
+			class="m-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-gray-800 shadow-2xl sm:w-2/3"
+		>
+			{#if !playerLoaded}
+				<h1 class="animate-bounce text-2xl font-bold text-white">Livestream Loading...</h1>
+			{/if}
 			<mux-player
+				class:hidden={!playerLoaded}
 				bind:this={player}
 				playback-id={stream.playback_id}
 				playback-token={token}
@@ -78,19 +90,11 @@
 	<button
 		class="m-4 rounded bg-orange-500 px-4 py-2 font-bold text-white hover:bg-orange-400"
 		onclick={async () => {
-			console.log('attempting signout');
+			const success = await signoutWithTimeout(() => supabase.auth.signOut(), 3000);
 
-			try {
-				const result = await supabase.auth.signOut();
-
-				console.log('signout result', result);
-
-				console.log('signed out');
-			} catch (err) {
-				console.error('signout error', err);
+			if (success) {
+				await goto('/');
 			}
-			console.log('signed out');
-			await goto('/');
 		}}>Sign out</button
 	>
 </div>

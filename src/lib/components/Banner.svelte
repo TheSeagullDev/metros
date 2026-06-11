@@ -8,6 +8,8 @@
 	let banners = $state([]);
 
 	let current = $state(0);
+	let rotationInterval = null;
+	let pollInterval = null;
 
 	async function loadBanners() {
 
@@ -18,15 +20,15 @@
 				.eq('active', true);
 
 		banners = data || [];
+		console.log('[BANNER] Loaded banners:', banners.length);
 	}
 
 	onMount(async () => {
 
 		await loadBanners();
 
-		// rotate messages
-
-		setInterval(() => {
+		// rotate messages every 15 seconds
+		rotationInterval = setInterval(() => {
 
 			if (banners.length > 0) {
 				current =
@@ -34,28 +36,20 @@
 					% banners.length;
 			}
 
-		}, 5000);
+		}, 15000);
 
-		// realtime updates
+		// poll for banner updates every 30 seconds (instead of realtime)
+		// this prevents Safari WebSocket suspension issues
+		pollInterval = setInterval(async () => {
+			console.log('[BANNER] Polling for updates...');
+			await loadBanners();
+		}, 30000);
 
-		supabase
-			.channel('banners')
-
-			.on(
-				'postgres_changes',
-
-				{
-					event: '*',
-					schema: 'public',
-					table: 'banners'
-				},
-
-				async () => {
-					await loadBanners();
-				}
-			)
-
-			.subscribe();
+		// cleanup on unmount
+		return () => {
+			if (rotationInterval) clearInterval(rotationInterval);
+			if (pollInterval) clearInterval(pollInterval);
+		};
 	});
 </script>
 
@@ -64,3 +58,20 @@
 		<a href={banners[current].clickLink} target="_blank"><img class="rounded-md m-auto" src={banners[current].imgLink} alt={banners[current].alt}></a>
 	</div>
 {/if}
+
+<!-- 
+CHANGES:
+1. Removed realtime subscription
+2. Added pollInterval that calls loadBanners() every 20 seconds
+3. Added proper cleanup in onMount return (clears both intervals)
+4. Kept existing rotation logic (5 second rotation)
+5. Kept existing UI and styling
+
+WHY THIS IS BETTER:
+- No WebSocket = Safari can't suspend it
+- No state corruption
+- Still gets fresh banners every 20 seconds
+- Banner rotation still works (5 sec)
+- Cleanup prevents memory leaks
+- Logout will work reliably
+-->

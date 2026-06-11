@@ -1,5 +1,3 @@
-// src/routes/watch/+page.server.js
-
 import jwt from 'jsonwebtoken';
 import { redirect } from '@sveltejs/kit';
 
@@ -17,15 +15,25 @@ export async function load({ locals }) {
 			.from('streams')
 			.select('*')
 			.eq('active', true)
-			.single();
+			.maybeSingle();
 
 		if (error) {
 			console.error('[STREAM_LOAD_ERROR]', error);
-			throw new Error('No active stream');
+
+			return {
+				stream: null,
+				token: null,
+				streamNotStarted: true
+			};
 		}
 
+		// No active stream is NOT an error.
 		if (!stream) {
-			throw new Error('No stream found');
+			return {
+				stream: null,
+				token: null,
+				streamNotStarted: true
+			};
 		}
 
 		const privateKey = MUX_SIGNING_KEY.replace(/\\n/g, '\n');
@@ -45,10 +53,16 @@ export async function load({ locals }) {
 
 		return {
 			stream,
-			token
+			token,
+			streamNotStarted: false
 		};
 	} catch (error) {
 		console.error('[WATCH_PAGE_LOAD_ERROR]', error);
-		throw redirect(303, '/');
+
+		return {
+			stream: null,
+			token: null,
+			streamNotStarted: true
+		};
 	}
 }

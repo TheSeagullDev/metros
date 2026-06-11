@@ -22,6 +22,8 @@
 	let accessCode = $state();
 	let checkoutToken = $state(null);
 	let isInitializingPayment = $state(false);
+	let resendCountdown = $state(0);
+	let isResendDisabled = $state(false);
 
 	$effect(async () => {
 		if (form?.errorCode) {
@@ -141,8 +143,12 @@
 		}
 	}
 
-	async function requestOtp() {
+async function requestOtp() {
+		otpError = null;
+ 
 		try {
+			console.log('[OTP_REQUEST] Verifying ticket for:', otpEmail);
+			
 			const response = await fetch('/api/verify-ticket', {
 				method: 'POST',
 				headers: {
@@ -152,56 +158,114 @@
 					email: otpEmail
 				})
 			});
-
+ 
 			const verify = await response.json();
-
+ 
 			if (!verify.success) {
-				notifications.error(ERROR_CODES.TICKET_NOT_FOUND);
+				otpError = 'No ticket found for that email';
+				console.log('[OTP_REQUEST] No ticket found');
 				return;
 			}
-
-			ticketValidated = true;
-			otpError = null;
-
+ 
+			console.log('[OTP_REQUEST] Ticket verified, requesting OTP...');
+ 
+			// Request OTP from Supabase
 			const { error } = await supabase.auth.signInWithOtp({
 				email: otpEmail,
 				options: {
 					shouldCreateUser: false
 				}
 			});
-
+ 
 			if (error) {
-				handleAuthError(error, 'otp_request');
-				ticketValidated = false;
+				console.error('[OTP_REQUEST_ERROR]', error.message);
+				
+				// Check for rate limit error
+				if (error.message.includes('you can only request this after')) {
+					// Extract seconds from message: "you can only request this after 23 seconds"
+					const match = error.message.match(/after (\d+) seconds/);
+					const secondsLeft = match ? parseInt(match[1]) : 60;
+					
+					otpError = `Too many requests. Please wait ${secondsLeft} seconds before trying again.`;
+					console.log('[OTP_REQUEST] Rate limited:', otpError);
+				} else if (error.message.includes('No ticket')) {
+					otpError = 'No ticket found for that email';
+				} else {
+					otpError = error.message || 'Failed to send OTP';
+				}
 				return;
 			}
-
-			notifications.success('Code sent! Check your email.');
-		} catch (error) {
-			console.error('[OTP_REQUEST_ERROR]', error);
-			notifications.error(ERROR_CODES.NETWORK_ERROR);
+ 
+			console.log('[OTP_REQUEST] OTP sent successfully');
+			
+			// Move to verification step
+			ticketValidated = true;
+			otpError = null;
+			
+			// Start resend countdown
+			startResendCountdown();
+ 
+		} catch (err) {
+			console.error('[OTP_REQUEST_EXCEPTION]', err);
+			otpError = 'Failed to request OTP. Please try again.';
 		}
 	}
-
+ 
+	function startResendCountdown() {
+		resendCountdown = 60;
+		isResendDisabled = true;
+ 
+		const interval = setInterval(() => {
+			resendCountdown -= 1;
+ 
+			if (resendCountdown <= 0) {
+				clearInterval(interval);
+				isResendDisabled = false;
+				resendCountdown = 0;
+			}
+		}, 1000);
+	}
+ 
 	async function submitOtp() {
+		otpError = null;
+ 
 		try {
+			console.log('[OTP_VERIFY] Verifying OTP token');
+ 
 			const { error } = await supabase.auth.verifyOtp({
 				email: otpEmail,
 				token: otpToken,
 				type: 'email'
 			});
-
+ 
 			if (error) {
-				handleAuthError(error, 'otp_verify');
+				console.error('[OTP_VERIFY_ERROR]', error.message);
+				
+				if (error.message.includes('invalid') || error.message.includes('expired')) {
+					otpError = 'Invalid or expired code. Please try again.';
+				} else {
+					otpError = error.message || 'Failed to verify code';
+				}
 				return;
 			}
-
-			notifications.success('Welcome back! Redirecting to stream...');
+ 
+			console.log('[OTP_VERIFY] OTP verified successfully');
 			window.location.href = '/watch';
-		} catch (error) {
-			console.error('[OTP_VERIFY_ERROR]', error);
-			notifications.error(ERROR_CODES.NETWORK_ERROR);
+ 
+		} catch (err) {
+			console.error('[OTP_VERIFY_EXCEPTION]', err);
+			otpError = 'Failed to verify code. Please try again.';
 		}
+	}
+ 
+	function resetOtpFlow() {
+		otpState = false;
+		ticketValidated = false;
+		otpError = null;
+		otpEmail = '';
+		otpToken = '';
+		resendCountdown = 0;
+		isResendDisabled = false;
 	}
 </script>
 
@@ -252,7 +316,7 @@
 				disabled={isInitializingPayment}
 				class="my-4 w-full rounded-2xl bg-red-600 px-8 py-6 text-3xl font-bold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
 			>
-				{isInitializingPayment ? 'Initializing...' : 'WATCH LIVE'}
+				{isInitializingPayment ? 'Initializing...' : 'PURCHASE ACCESS'}
 			</button>
 			<button
 				onclick={() => (otpState = true)}
@@ -268,44 +332,108 @@
 		</div>
 	{:else if otpState}
 		<div class="m-4 rounded-2xl bg-blue-50 p-8 drop-shadow-2xl">
+		{#if !ticketValidated}
+			<!-- STEP 1: Enter email -->
 			<h1 class="my-4 text-2xl">Use a previously purchased ticket</h1>
+			
 			{#if otpError}
-				<h2 class="text-lg text-red-500">Error: {otpError}</h2>
+				<div class="mb-4 rounded bg-red-100 p-3 text-red-800">
+					<p class="text-sm font-semibold">{otpError}</p>
+				</div>
 			{/if}
-			{#if !ticketValidated}
-				<div class="flex flex-col">
-					<label for="email" class="text-lg">Enter your email:</label>
-					<input type="email" name="email" id="email" bind:value={otpEmail} />
+ 
+			<div class="flex flex-col">
+				<label for="email" class="text-lg font-semibold">Enter your email:</label>
+				<input 
+					type="email" 
+					name="email" 
+					id="email" 
+					bind:value={otpEmail}
+					placeholder="you@example.com"
+					class="my-2 rounded border border-gray-300 px-3 py-2"
+				/>
+				<button
+					onclick={requestOtp}
+					class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400 disabled:opacity-50"
+				>
+					Send Code
+				</button>
+			</div>
+ 
+		{:else}
+			<!-- STEP 2: Enter OTP code with resend button -->
+			<h1 class="my-4 text-2xl">Enter your code</h1>
+			<p class="mb-4 text-sm text-gray-600">We've sent a 6-digit code to <strong>{otpEmail}</strong></p>
+ 
+			{#if otpError}
+				<div class="mb-4 rounded bg-red-100 p-3 text-red-800">
+					<p class="text-sm font-semibold">{otpError}</p>
+				</div>
+			{/if}
+ 
+			<div class="flex flex-col">
+				<label for="otpToken" class="text-lg font-semibold">6-digit code:</label>
+				<input 
+					type="tel" 
+					maxlength="6" 
+					name="otpToken" 
+					id="otpToken" 
+					bind:value={otpToken}
+					placeholder="000000"
+					class="my-2 rounded border border-gray-300 px-3 py-2 text-center text-2xl tracking-widest"
+					inputmode="numeric"
+				/>
+ 
+				<button
+					onclick={submitOtp}
+					class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+				>
+					Verify Code
+				</button>
+ 
+				<!-- Resend section -->
+				<div class="mt-6 border-t pt-4">
+					<p class="mb-3 text-center text-sm text-gray-600">Didn't receive a code?</p>
 					<button
 						onclick={requestOtp}
-						class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
-						>Submit</button
+						disabled={isResendDisabled}
+						class="w-full rounded border-2 border-orange-500 px-4 py-2 font-semibold text-orange-500 hover:bg-orange-50 disabled:border-gray-300 disabled:text-gray-400"
 					>
+						{#if isResendDisabled}
+							Resend code in {resendCountdown}s
+						{:else}
+							Resend code
+						{/if}
+					</button>
 				</div>
-			{:else}
-				<div class="flex flex-col">
-					<label for="otpToken" class="text-lg"
-						>Check your email and enter the six digit code below:</label
-					>
-					<input type="tel" maxlength="6" name="otpToken" id="otpToken" bind:value={otpToken} />
-					<button
-						onclick={submitOtp}
-						class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
-						>Submit</button
-					>
-				</div>
-			{/if}
-		</div>
-		<div>
-			<button
-				onclick={() => {
-					otpState = false;
-					ticketValidated = false;
-				}}
-				class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
-				>Go back</button
-			>
-		</div>
+ 
+				<!-- Change email link -->
+				<button
+					onclick={() => {
+						ticketValidated = false;
+						otpError = null;
+						otpToken = '';
+						resendCountdown = 0;
+						isResendDisabled = false;
+					}}
+					class="mt-3 text-center text-sm text-blue-600 hover:text-blue-800 underline"
+				>
+					Use different email
+				</button>
+			</div>
+		{/if}
+	</div>
+ 
+	<!-- Go back button -->
+	<div class="mt-4 text-center">
+		<button
+			onclick={resetOtpFlow}
+			class="m-4 rounded bg-orange-500 px-4 py-2 text-2xl font-bold text-white hover:bg-orange-400"
+		>
+			Go back
+		</button>
+	</div>
+ 
 	{:else}
 		<div class="flex w-full flex-col items-stretch justify-center sm:w-2/3 sm:flex-row">
 			<div

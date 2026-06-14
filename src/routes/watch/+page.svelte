@@ -37,7 +37,7 @@
 	<Banner></Banner>
 	{#if streamNotStarted}
 		<div
-			class="m-4 aspect-video w-full flex flex-col justify-center items-center overflow-hidden rounded-xl bg-gray-800 shadow-2xl sm:w-2/3"
+			class="m-4 aspect-video w-full flex flex-col justify-center items-center overflow-hidden rounded-xl bg-gray-800 shadow-2xl sm:w-2/3 p-2"
 		>
 			<h1 class="text-xl sm:text-3xl font-bold text-white">The livestream has not started yet</h1>
 

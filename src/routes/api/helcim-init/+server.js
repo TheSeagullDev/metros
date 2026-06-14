@@ -14,7 +14,7 @@ export async function POST({ request }) {
 			},
 			body: JSON.stringify({
 				paymentType: 'purchase',
-				amount: Math.round(Math.random() * 1000) / 100,
+				amount: 12.99,
 				currency: 'USD',
 				displayContactFields: 1,
 				customStyling: { brandColor: 'EF6823' }

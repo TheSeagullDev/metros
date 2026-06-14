@@ -310,7 +310,7 @@ async function requestOtp() {
 	</div>
 	{#if !otpState && !accessCodeState}
 		<h1 class="my-2 text-3xl text-white sm:text-6xl">Official Livestream Home</h1>
-		<div class="flex flex-col items-center gap-2 md:w-1/4">
+		<div class="flex flex-col items-center gap-2 w-full p-4 md:w-1/4">
 			<button
 				onclick={pay}
 				disabled={isInitializingPayment}
@@ -440,7 +440,7 @@ async function requestOtp() {
 				class="m-4 flex flex-col justify-around rounded-2xl bg-blue-50 p-8 drop-shadow-2xl sm:w-1/2 xl:w-1/4"
 			>
 				<h1 class="text-lg">IMPAVL Support Information</h1>
-				<p>Support email: <a href="support@IMPAVL.com" class="underline">support@IMPAVL.com</a></p>
+				<p>Support email: <a href="mailto:support@IMPAVL.com" class="underline">support@IMPAVL.com</a></p>
 				<p>Phone number: TBD</p>
 				<p>
 					In any support requests, please include your name, the email you purchased your ticket

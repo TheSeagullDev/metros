@@ -61,7 +61,7 @@
 				bind:this={player}
 				playback-id={stream.playback_id}
 				playback-token={token}
-				poster="https://metros.impavl.com/thumbnails/IMPLOGO.png"
+				poster="https://metros.impavl.com/thumbnails/METROS.png"
 				stream-type="live"
 				onerror={(e) => {
 					console.error('[MUX ERROR]', e);

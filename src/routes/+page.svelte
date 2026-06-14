@@ -441,7 +441,7 @@ async function requestOtp() {
 			>
 				<h1 class="text-lg">IMPAVL Support Information</h1>
 				<p>Support email: <a href="mailto:support@IMPAVL.com" class="underline">support@IMPAVL.com</a></p>
-				<p>Phone number: TBD</p>
+				<p>Phone number: 914-586-3361</p>
 				<p>
 					In any support requests, please include your name, the email you purchased your ticket
 					with, and your phone number, so we can assist you quicker!

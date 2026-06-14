@@ -53,5 +53,64 @@ export const actions = {
 			success: true,
 			code
 		};
+	},
+	createPhoneOrder: async ({ request }) => {
+		const data = await request.formData();
+
+		const email = data.get('email')?.toString().trim().toLowerCase();
+
+		if (!email) {
+			return fail(400, {
+				error: 'Email required'
+			});
+		}
+
+		// Prevent duplicates
+		const { data: existing } = await supabaseAdmin
+			.from('tickets')
+			.select('email,password')
+			.eq('email', email)
+			.maybeSingle();
+
+		if (existing) {
+			return {
+				ticket: {
+					email: existing.email,
+					password: existing.password
+				}
+			};
+		}
+
+		const password = crypto.randomUUID();
+
+		const { error: authError } = await supabaseAdmin.auth.admin.createUser({
+			email,
+			password,
+			email_confirm: true
+		});
+
+		if (authError) {
+			return fail(500, {
+				error: authError.message
+			});
+		}
+
+		const { error: ticketError } = await supabaseAdmin.from('tickets').insert({
+			email,
+			password,
+			paid: true
+		});
+
+		if (ticketError) {
+			return fail(500, {
+				error: ticketError.message
+			});
+		}
+
+		return {
+			ticket: {
+				email
+			}
+		};
 	}
 };

@@ -14,8 +14,9 @@ export async function POST({ request }) {
 			},
 			body: JSON.stringify({
 				paymentType: 'purchase',
-				amount: 12.99,
+				amount: 0.01,
 				currency: 'USD',
+				digitalWallet: '{"google-pay": 1}',
 				displayContactFields: 1,
 				customStyling: { brandColor: 'EF6823' }
 			})

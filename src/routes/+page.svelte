@@ -8,6 +8,7 @@
 	import { tick } from 'svelte';
 	import { notifications, ERROR_CODES } from '$lib/stores/notificationStore';
 	import { handleAuthError } from '$lib/utils/errorHandler';
+	import RecordingAvailableModal from '$lib/components/RecordingAvailableModal.svelte';
 
 	const supabase = $derived(page.data.supabase);
 
@@ -292,6 +293,8 @@ async function requestOtp() {
 	}}
 />
 
+<RecordingAvailableModal />
+
 <div
 	class="fixed inset-0 -z-10 h-screen"
 	style="background-image: url({bg}); background-size: cover; background-position: 50% 80%;"
@@ -309,7 +312,7 @@ async function requestOtp() {
 		/>
 	</div>
 	{#if !otpState && !accessCodeState}
-		<h1 class="my-2 text-3xl text-white sm:text-6xl">Official Livestream Home</h1>
+		<h1 class="my-2 text-3xl text-white sm:text-6xl">Replay Now Available</h1>
 		<div class="flex flex-col items-center gap-2 w-full p-4 md:w-1/4">
 			<button
 				onclick={pay}
@@ -321,8 +324,8 @@ async function requestOtp() {
 			<button
 				onclick={() => (otpState = true)}
 				class="w-full rounded-2xl bg-black p-4 text-white hover:bg-gray-900 sm:w-[85%]"
-				><div class="text-sm">Already Purchased Access?</div>
-				<div class="text-xs font-bold">Log in Here</div></button
+				><div class="text-sm">Already Purchased?</div>
+				<div class="text-xs font-bold">Access Replay</div></button
 			>
 			<button
 				onclick={() => (accessCodeState = true)}
@@ -441,7 +444,6 @@ async function requestOtp() {
 			>
 				<h1 class="text-lg">IMPAVL Support Information</h1>
 				<p>Support email: <a href="mailto:support@IMPAVL.com" class="underline">support@IMPAVL.com</a></p>
-				<p>Phone number: 914-586-3361</p>
 				<p>
 					In any support requests, please include your name, the email you purchased your ticket
 					with, and your phone number, so we can assist you quicker!

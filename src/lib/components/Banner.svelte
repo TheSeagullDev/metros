@@ -53,7 +53,7 @@
 				current = (current + 1) % banners.length;
 				console.log('[BANNER] Rotated to index:', current);
 			}
-		}, 5000);
+		}, 30000);
 
 		// poll for banner updates every 20 seconds
 		pollInterval = setInterval(async () => {

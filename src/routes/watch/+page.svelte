@@ -39,14 +39,14 @@
 		<div
 			class="m-4 aspect-video w-full flex flex-col justify-center items-center overflow-hidden rounded-xl bg-gray-800 shadow-2xl sm:w-2/3 p-2"
 		>
-			<h1 class="text-xl sm:text-3xl font-bold text-white">The livestream has not started yet</h1>
+			<h1 class="text-xl sm:text-3xl font-bold text-white">Thank you for watching the Metros!</h1>
 
 			<p class="mt-4 text-center text-sm sm:text-lg text-gray-300">
-				Coverage of the Red Carpet will begin at 6:00 PM, followed by the Metropolitan High School Theater Awards Ceremony at 7:30 PM.
+				The livestream has now concluded.
 			</p>
 
 			<p class="mt-2 text-center text-xs sm:text-lg text-gray-400">
-				You may leave this page open and refresh closer to the start time.
+				Please check back soon for the recording!
 			</p>
 		</div>
 	{:else if token && stream}
@@ -62,7 +62,7 @@
 				playback-id={stream.playback_id}
 				playback-token={token}
 				poster="https://metros.impavl.com/thumbnails/METROS.png"
-				stream-type="live"
+				stream-type="on-demand"
 				onerror={(e) => {
 					console.error('[MUX ERROR]', e);
 				}}
